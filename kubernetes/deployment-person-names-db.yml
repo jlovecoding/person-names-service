@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: person-names-db
+  labels:
+    app: person-names-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: person-names-db
+  template:
+    metadata:
+      labels:
+        app: person-names-db
+    spec:
+      containers:
+        - name: person-names-db
+          image: mysql:latest
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /home/juan/software/tmp/person-names-mysql-db
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: person-names-kubernetes-configmap
+                  key: person-names-db-name
+
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: person-names-kubernetes-secret
+                  key: person-names-root-password
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: person-names-kubernetes-secret
+                  key: person-names-root-username
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: person-names-kubernetes-secret
+                  key: person-names-root-password
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
